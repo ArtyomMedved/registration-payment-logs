@@ -206,6 +206,22 @@ app.post('/posts/:postId/like', async (req, res) => {
   }
 });
 
+// Обработчик POST запроса для дизлайка поста
+app.post('/posts/:postId/dislike', async (req, res) => {
+    const { postId } = req.params;
+    try {
+      // Выполнение запроса к базе данных для обновления дизлайков
+      await pool.query('UPDATE posts SET dislikes = dislikes + 1 WHERE id = ?', [postId]);
+      
+      // Получение обновленного списка постов
+      const updatedPosts = await pool.query('SELECT * FROM posts');
+      res.json(updatedPosts);
+    } catch (error) {
+      console.error('Error updating dislikes:', error);
+      res.status(500).send('Server error');
+    }
+  });
+
 // Добавляем эндпоинт для получения удаленных постов
 app.get('/deleted-posts', async (req, res) => {
     try {
