@@ -209,10 +209,13 @@ app.post('/posts/:postId/like', async (req, res) => {
 // DELETE-запрос для удаления поста по ID
 app.delete('/posts/:postId', async (req, res) => {
     const { postId } = req.params;
+    const { reason } = req.body;
 
     try {
         // Удаление поста из базы данных
         await pool.query('DELETE FROM posts WHERE id = ?', [postId]);
+
+        // Добавление причины удаления поста в логи или куда-то еще (необходимо реализовать сохранение логов)
 
         res.send('Post deleted successfully');
     } catch (error) {

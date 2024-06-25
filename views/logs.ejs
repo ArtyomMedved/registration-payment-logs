@@ -145,15 +145,32 @@
             div.innerHTML = `<strong>${post.author_name}</strong>: ${post.text} <br>
                              <img src="${post.image}" alt="Post Image"> <br>
                              Likes: ${post.likes} - Dislikes: ${post.dislikes}
-                             <button class="delete-btn" onclick="deletePost('${post.id}')">Удалить пост</button>`;
+                             <button class="delete-btn" onclick="confirmDelete('${post.id}')">Удалить пост</button>`;
             postsList.appendChild(div);
         });
     }
 
-    async function deletePost(postId) {
+    async function confirmDelete(postId) {
+        const reason = prompt('Пожалуйста, укажите причину удаления:');
+        if (reason === null || reason === '') {
+            alert('Укажите причину удаления!');
+            return;
+        }
+
+        const confirmed = confirm(`Вы уверены, что хотите удалить этот пост?\nПричина: ${reason}`);
+        if (confirmed) {
+            await deletePost(postId, reason);
+        }
+    }
+
+    async function deletePost(postId, reason) {
         try {
             const response = await fetch(`/posts/${postId}`, {
-                method: 'DELETE'
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ reason })
             });
 
             if (response.ok) {
@@ -169,6 +186,10 @@
             alert('Ошибка удаления поста');
         }
     }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        showPosts();
+    });
 
         function toggleContent(contentId, fetchFunction) {
             const content = document.getElementById(contentId);
