@@ -40,7 +40,7 @@
             margin-right: 10px;
             border-radius: 50%;
         }
-        .btn-show-db, .btn-show-posts {
+        .btn-show-db, .btn-show-posts,  .btn-show-deleted{
             display: block;
             margin: 20px auto;
             padding: 10px 20px;
@@ -51,7 +51,7 @@
             cursor: pointer;
         }
         .btn-show-db:hover, .btn-show-posts:hover {
-            background-color: #0056b3;
+            background-color: #2d3f53;
         }
         #db-content, #posts-content {
             display: none;
@@ -62,19 +62,20 @@
             gap: 20px;
             margin-top: 20px;
         }
-        .post-item {
-            background-color: #f9f9f9;
-            padding: 10px;
-            border-radius: 5px;
-            box-shadow: 0 0 5px rgba(0,0,0,0.1);
-        }
-        .post-item img {
-            max-width: 100%;
-            height: auto;
-            display: block;
-            margin: 0 auto 10px;
-            border-radius: 5px;
-        }
+        .post-item, .deleted-post-item {
+    background-color: #f9f9f9;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 0 5px rgba(0,0,0,0.1);
+}
+
+.post-item img, .deleted-post-item img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto 10px;
+    border-radius: 5px;
+}
         table {
             width: 100%;
             border-collapse: collapse;
@@ -118,6 +119,13 @@
             <h2>Posts Content</h2>
             <div class="posts-grid" id="posts-list">
                 <!-- Здесь будут отображаться посты -->
+            </div>
+        </div>
+        <button class="btn-show-deleted" onclick="toggleContent('deleted-posts-content', 'showDeletedPosts')">Показать удаленные посты</button>
+        <div id="deleted-posts-content">
+            <h2>Удаленные посты</h2>
+            <div class="posts-grid" id="deleted-posts-list">
+                <!-- Здесь будут отображаться удаленные посты -->
             </div>
         </div>
     </div>
@@ -200,6 +208,32 @@
                 window[fetchFunction]();
             }
         }
+
+        async function showDeletedPosts() {
+    try {
+        const response = await fetch('/deleted-posts');
+        const deletedPosts = await response.json();
+        const deletedPostsList = document.getElementById('deleted-posts-list');
+        deletedPostsList.innerHTML = '';
+        deletedPosts.forEach(post => {
+            const div = document.createElement('div');
+            div.className = 'post-item'; // Используем класс .post-item для удаленных постов
+            div.innerHTML = `<strong>Автор:</strong> ${post.author_name} <br>
+                             <strong>Текст поста:</strong> ${post.post_text} <br>
+                             <strong>Причина удаления:</strong> ${post.reason} <br>
+                             <img src="${post.post_image}" alt="Post Image">`;
+            deletedPostsList.appendChild(div);
+        });
+    } catch (error) {
+        console.error('Error fetching deleted posts:', error);
+        alert('Ошибка загрузки удаленных постов');
+    }
+}
+
+// Вызываем функцию showDeletedPosts() при загрузке страницы или при нажатии кнопки "Показать удаленные посты"
+document.addEventListener('DOMContentLoaded', () => {
+    showDeletedPosts();
+});
     </script>
 </body>
 </html>

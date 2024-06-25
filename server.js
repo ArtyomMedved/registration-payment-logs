@@ -206,18 +206,41 @@ app.post('/posts/:postId/like', async (req, res) => {
   }
 });
 
-// DELETE-запрос для удаления поста по ID
+// Добавляем эндпоинт для получения удаленных постов
+app.get('/deleted-posts', async (req, res) => {
+    try {
+        // Запрос к базе данных для получения удаленных постов
+        const [rows] = await pool.query('SELECT * FROM deleted_posts_log');
+        res.json(rows);
+    } catch (error) {
+        console.error('Error fetching deleted posts:', error);
+        res.status(500).send('Server error');
+    }
+});
+
+// Эндпоинт для удаления поста
 app.delete('/posts/:postId', async (req, res) => {
     const { postId } = req.params;
     const { reason } = req.body;
 
     try {
-        // Удаление поста из базы данных
-        await pool.query('DELETE FROM posts WHERE id = ?', [postId]);
+        // Получаем данные поста, который собираемся удалить
+        const [post] = await pool.query('SELECT * FROM posts WHERE id = ?', [postId]);
 
-        // Добавление причины удаления поста в логи или куда-то еще (необходимо реализовать сохранение логов)
+        // Если пост найден, добавляем его в таблицу удаленных постов
+        if (post.length > 0) {
+            const { text, image, author_name, author_email } = post[0];
+            await pool.query(
+                'INSERT INTO deleted_posts_log (author_name, author_email, post_text, post_image, reason) VALUES (?, ?, ?, ?, ?)',
+                [author_name, author_email, text, image, reason]
+            );
 
-        res.send('Post deleted successfully');
+            // Удаляем пост из основной таблицы
+            await pool.query('DELETE FROM posts WHERE id = ?', [postId]);
+            res.send('Post deleted and logged successfully');
+        } else {
+            res.status(404).send('Post not found');
+        }
     } catch (error) {
         console.error('Error deleting post:', error);
         res.status(500).send('Server error');
